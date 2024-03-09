@@ -14,5 +14,8 @@
     "axios": "^1.6.7",
     "commander": "^12.0.0",
     "inquirer": "^9.2.15"
+  },
+  "bin": {
+    "ducky": "./cli.js"
   }
 }
