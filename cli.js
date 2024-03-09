@@ -1,4 +1,4 @@
-#!/usr/bin/env cross-env node
+#!/usr/bin/env node
 
 import axios from "axios";
 import { Command } from "commander";
@@ -149,13 +149,14 @@ program
           choices: [
             { name: 'MERN Project', value: 'mern' },
             { name: 'Django', value: 'django' },
+            { name: 'Flask', value: 'flask' },
+            { name: 'Ruby on Rails', value: 'ruby'}
           ],
         },
       ]);
   
-      console.log('Chosen Option:', answer.devEnv);
-  
       if (answer.devEnv === 'mern') {
+        // Backend setup
         shell.mkdir('-p', './backend/src/controllers');
         shell.mkdir('-p', './backend/src/models');
         shell.mkdir('-p', './backend/src/routes');
@@ -167,11 +168,85 @@ program
         shell.exec('npm init -y');
         shell.exec('npm install express mongoose cors');
         shell.cd('..');
-  
+        shell.mkdir('-p', './frontend');
         shell.cd('frontend');
-        shell.exec('npm init -y');
         shell.exec('npx create-react-app .');
         shell.cd('..');
+      }
+      if (answer.devEnv === 'django') {
+        const djangoSetup = await inquirer.prompt([
+            {
+                type: 'input',
+                name: 'projectName',
+                message: 'Enter project name: '
+            },
+            {
+              type: 'list',
+              name: 'os',
+              message: 'Select your operating system',
+              choices: [
+                { name: 'Windows', value: 'win' },
+                { name: 'Linux', value: 'linux' },
+                { name: 'MacOs', value: 'mac' },
+              ],
+            },
+          ]);
+          if(djangoSetup.os === 'win') {
+            shell.exec('py -3 -m venv .venv');
+            // shell.exec('Set-ExecutionPolicy RemoteSigned -Scope Process');
+            // shell.exec('.venv/scripts/activate');
+          } else if(djangoSetup.os === 'linux') {
+            shell.exec('sudo apt-get install python3-venv');
+            shell.exec('python3 -m venv .venv');
+            shell.exec('source .venv/bin/activate');
+          } else if(djangoSetup.os === 'mac'){
+            shell.exec('python3 -m venv .venv');
+            shell.exec('source .venv/bin/activate');
+          }
+          shell.exec('python -m pip install django');
+          shell.exec(`django-admin startproject ${djangoSetup.projectName} .`);
+          shell.exec('python manage.py migrate');
+          shell.exec('python manage.py runserver');
+      }
+      if(answer.devEnv === 'flask'){
+        const flaskSetup = await inquirer.prompt([
+            {
+              type: 'list',
+              name: 'os',
+              message: 'Select your operating system',
+              choices: [
+                { name: 'Windows', value: 'win' },
+                { name: 'Linux', value: 'linux' },
+                { name: 'MacOs', value: 'mac' },
+              ],
+            },
+          ]);
+          if(flaskSetup.os === 'win') {
+            shell.exec('py -3 -m venv .venv');
+            // shell.exec('Set-ExecutionPolicy RemoteSigned -Scope Process');
+            // shell.exec('.venv/scripts/activate');
+          } else if(flaskSetup.os === 'linux') {
+            shell.exec('sudo apt-get install python3-venv');
+            shell.exec('python3 -m venv .venv');
+            shell.exec('source .venv/bin/activate');
+          } else if(flaskSetup.os === 'mac'){
+            shell.exec('python3 -m venv .venv');
+            shell.exec('source .venv/bin/activate');
+          }
+          shell.exec('pip install flask');
+          shell.exec('touch app.py');
+      }
+      if(answer.devEnv === 'ruby') {
+        const rubySetup = await inquirer.prompt([{
+            type: 'input',
+            name: 'projectName',
+            message: 'Enter project name: ',
+        }]);
+        shell.exec('gem install rails');
+        shell.exec(`rails new ${rubySetup.projectName}`);
+        shell.cd(`${rubySetup.projectName}`);
+        shell.exec('rails db:create');
+        shell.exec('rails server');
       }
     });
 
