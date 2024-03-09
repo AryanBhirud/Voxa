@@ -5,10 +5,9 @@ import { Command } from "commander";
 import Configstore from "configstore";
 import fs from "fs";
 import inquirer from "inquirer";
-import shell from 'shelljs';
+import shell from "shelljs";
 const program = new Command();
 const config = new Configstore("voxa");
-
 
 program.version("1.0.0").description("A simple CLI application");
 
@@ -50,17 +49,41 @@ program
                     type: "input",
                     name: "apiKey",
                     message: "Enter an API Key: ",
-                }
+                },
+                {
+                    type: "confirm",
+                    name: "customMonitoring",
+                    message: "Do you have a New Relic account for monitoring? ",
+                    default: false,
+                },
+                {
+                    when: (response) => response.customMonitoring,
+                    type: "input",
+                    name: "licenseKey",
+                    message: "Enter License Key: ",
+                },
+                {
+                    when: (response) => response.customMonitoring,
+                    type: "input",
+                    name: "appName",
+                    message: "Enter App Name: ",
+                },
             ]);
 
             config.set("baseUrl", answers.baseUrl);
-            
-            if(answers.apiKey) {
+
+            if (answers.apiKey) {
                 config.set("apiKey", answers.apiKey);
             }
 
             if (answers.header) {
                 headers.push(answers.header);
+            }
+            if (answers.licenseKey) {
+                config.set("licenseKey", answers.licenseKey);
+            }
+            if (answers.appName) {
+                config.set("appName", answers.appName);
             }
         } else {
             config.set("baseUrl", "http://localhost:3000/api");
@@ -82,7 +105,7 @@ program
         const voxaConfig = JSON.parse(fs.readFileSync("voxa.config", "utf8"));
         const baseUrl = voxaConfig.baseUrl;
         const headers = voxaConfig.headers || {};
-        const targetUrl = baseUrl + route
+        const targetUrl = baseUrl + route;
 
         try {
             const response = await axios.post(targetUrl, data, {
@@ -134,120 +157,141 @@ program
         }
     });
 
-
-    
-
-    program
-    .command('setup')
-    .description('Setup development environments seamlessly')
+program
+    .command("setup")
+    .description("Setup development environments seamlessly")
     .action(async () => {
-      const answer = await inquirer.prompt([
-        {
-          type: 'list',
-          name: 'devEnv',
-          message: 'Select development environment',
-          choices: [
-            { name: 'MERN Project', value: 'mern' },
-            { name: 'Django', value: 'django' },
-            { name: 'Flask', value: 'flask' },
-            { name: 'Ruby on Rails', value: 'ruby'}
-          ],
-        },
-      ]);
-  
-      if (answer.devEnv === 'mern') {
-        // Backend setup
-        shell.mkdir('-p', './backend/src/controllers');
-        shell.mkdir('-p', './backend/src/models');
-        shell.mkdir('-p', './backend/src/routes');
-        shell.touch('./backend/.gitignore');
-        shell.touch('./backend/src/app.js');
-        shell.touch('./backend/src/server.js');
-  
-        shell.cd('backend');
-        shell.exec('npm init -y');
-        shell.exec('npm install express mongoose cors');
-        shell.cd('..');
-        shell.mkdir('-p', './frontend');
-        shell.cd('frontend');
-        shell.exec('npx create-react-app .');
-        shell.cd('..');
-      }
-      if (answer.devEnv === 'django') {
-        const djangoSetup = await inquirer.prompt([
+        const answer = await inquirer.prompt([
             {
-                type: 'input',
-                name: 'projectName',
-                message: 'Enter project name: '
+                type: "list",
+                name: "devEnv",
+                message: "Select development environment",
+                choices: [
+                    { name: "MERN Project", value: "mern" },
+                    { name: "Django", value: "django" },
+                    { name: "Flask", value: "flask" },
+                    { name: "Ruby on Rails", value: "ruby" },
+                ],
             },
-            {
-              type: 'list',
-              name: 'os',
-              message: 'Select your operating system',
-              choices: [
-                { name: 'Windows', value: 'win' },
-                { name: 'Linux', value: 'linux' },
-                { name: 'MacOs', value: 'mac' },
-              ],
-            },
-          ]);
-          if(djangoSetup.os === 'win') {
-            shell.exec('py -3 -m venv .venv');
-            // shell.exec('Set-ExecutionPolicy RemoteSigned -Scope Process');
-            // shell.exec('.venv/scripts/activate');
-          } else if(djangoSetup.os === 'linux') {
-            shell.exec('sudo apt-get install python3-venv');
-            shell.exec('python3 -m venv .venv');
-            shell.exec('source .venv/bin/activate');
-          } else if(djangoSetup.os === 'mac'){
-            shell.exec('python3 -m venv .venv');
-            shell.exec('source .venv/bin/activate');
-          }
-          shell.exec('python -m pip install django');
-          shell.exec(`django-admin startproject ${djangoSetup.projectName} .`);
-          shell.exec('python manage.py migrate');
-          shell.exec('python manage.py runserver');
-      }
-      if(answer.devEnv === 'flask'){
-        const flaskSetup = await inquirer.prompt([
-            {
-              type: 'list',
-              name: 'os',
-              message: 'Select your operating system',
-              choices: [
-                { name: 'Windows', value: 'win' },
-                { name: 'Linux', value: 'linux' },
-                { name: 'MacOs', value: 'mac' },
-              ],
-            },
-          ]);
-          if(flaskSetup.os === 'win') {
-            shell.exec('py -3 -m venv .venv');
-            // shell.exec('Set-ExecutionPolicy RemoteSigned -Scope Process');
-            // shell.exec('.venv/scripts/activate');
-          } else if(flaskSetup.os === 'linux') {
-            shell.exec('sudo apt-get install python3-venv');
-            shell.exec('python3 -m venv .venv');
-            shell.exec('source .venv/bin/activate');
-          } else if(flaskSetup.os === 'mac'){
-            shell.exec('python3 -m venv .venv');
-            shell.exec('source .venv/bin/activate');
-          }
-          shell.exec('pip install flask');
-          shell.exec('touch app.py');
-      }
-      if(answer.devEnv === 'ruby') {
-        const rubySetup = await inquirer.prompt([{
-            type: 'input',
-            name: 'projectName',
-            message: 'Enter project name: ',
-        }]);
-        shell.exec('gem install rails');
-        shell.exec(`rails new ${rubySetup.projectName}`);
-        shell.cd(`${rubySetup.projectName}`);
-        shell.exec('rails db:create');
-        shell.exec('rails server');
-      }
+        ]);
+
+        if (answer.devEnv === "mern") {
+            // Backend setup
+            shell.mkdir("-p", "./backend/src/controllers");
+            shell.mkdir("-p", "./backend/src/models");
+            shell.mkdir("-p", "./backend/src/routes");
+            shell.touch("./backend/.gitignore");
+            shell.touch("./backend/src/app.js");
+            shell.touch("./backend/src/server.js");
+
+            shell.cd("backend");
+            shell.exec("npm init -y");
+            shell.exec("npm install express mongoose cors");
+            shell.cd("..");
+            shell.mkdir("-p", "./frontend");
+            shell.cd("frontend");
+            shell.exec("npx create-react-app .");
+            shell.cd("..");
+        }
+        if (answer.devEnv === "django") {
+            const djangoSetup = await inquirer.prompt([
+                {
+                    type: "input",
+                    name: "projectName",
+                    message: "Enter project name: ",
+                },
+                {
+                    type: "list",
+                    name: "os",
+                    message: "Select your operating system",
+                    choices: [
+                        { name: "Windows", value: "win" },
+                        { name: "Linux", value: "linux" },
+                        { name: "MacOs", value: "mac" },
+                    ],
+                },
+            ]);
+            if (djangoSetup.os === "win") {
+                shell.exec("py -3 -m venv .venv");
+                // shell.exec('Set-ExecutionPolicy RemoteSigned -Scope Process');
+                // shell.exec('.venv/scripts/activate');
+            } else if (djangoSetup.os === "linux") {
+                shell.exec("sudo apt-get install python3-venv");
+                shell.exec("python3 -m venv .venv");
+                shell.exec("source .venv/bin/activate");
+            } else if (djangoSetup.os === "mac") {
+                shell.exec("python3 -m venv .venv");
+                shell.exec("source .venv/bin/activate");
+            }
+            shell.exec("python -m pip install django");
+            shell.exec(
+                `django-admin startproject ${djangoSetup.projectName} .`
+            );
+            shell.exec("python manage.py migrate");
+            shell.exec("python manage.py runserver");
+        }
+        if (answer.devEnv === "flask") {
+            const flaskSetup = await inquirer.prompt([
+                {
+                    type: "list",
+                    name: "os",
+                    message: "Select your operating system",
+                    choices: [
+                        { name: "Windows", value: "win" },
+                        { name: "Linux", value: "linux" },
+                        { name: "MacOs", value: "mac" },
+                    ],
+                },
+            ]);
+            if (flaskSetup.os === "win") {
+                shell.exec("py -3 -m venv .venv");
+                // shell.exec('Set-ExecutionPolicy RemoteSigned -Scope Process');
+                // shell.exec('.venv/scripts/activate');
+            } else if (flaskSetup.os === "linux") {
+                shell.exec("sudo apt-get install python3-venv");
+                shell.exec("python3 -m venv .venv");
+                shell.exec("source .venv/bin/activate");
+            } else if (flaskSetup.os === "mac") {
+                shell.exec("python3 -m venv .venv");
+                shell.exec("source .venv/bin/activate");
+            }
+            shell.exec("pip install flask");
+            shell.exec("touch app.py");
+        }
+        if (answer.devEnv === "ruby") {
+            const rubySetup = await inquirer.prompt([
+                {
+                    type: "input",
+                    name: "projectName",
+                    message: "Enter project name: ",
+                },
+            ]);
+            shell.exec("gem install rails");
+            shell.exec(`rails new ${rubySetup.projectName}`);
+            shell.cd(`${rubySetup.projectName}`);
+            shell.exec("rails db:create");
+            shell.exec("rails server");
+        }
+    });
+
+program
+    .command("monitor")
+    .description("start real-time performance monitoring")
+    .option("-u, --url <url>", "URL of the web application")
+    .option(
+        "-t, --tool <tool>",
+        "performance monitoring tool (preferably NewRelic)"
+    )
+    .action((options) => {
+        const { url, tool } = options;
+        if (tool === "NewRelic") {
+            newrelic.setLicenseKey(`${voxaConfig.licenseKey}`);
+            newrelic.setAppName(`${voxaConfig.appName}`);
+            const app = newrelic.startWebTransaction(url, () => {});
+            app.end();
+        } else {
+            console.error("Unsupported performance monitoring tool");
+        }
     });
 
 program.parse(process.argv);
