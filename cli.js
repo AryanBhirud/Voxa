@@ -6,6 +6,7 @@ import Configstore from "configstore";
 import dotenv from "dotenv";
 import fs from "fs";
 import inquirer from "inquirer";
+import mysql from 'mysql2/promise';
 import shell from "shelljs";
 const program = new Command();
 const config = new Configstore("voxa");
