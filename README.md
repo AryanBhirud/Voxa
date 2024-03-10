@@ -13,14 +13,14 @@ To set up voxa-flow, follow these steps:
 3. Install all dependancies using `npm install`
 4. Create a `.env` file and add your database configurations.
 5. Run SQL scripts to setup the following tables:
- - users
- - user_stories
- - comments
- - tasks
- - task_assignments
- - velocity-tracking
- - sprints
- - sprint-tasks
+ * users
+ * user_stories
+ * comments
+ * tasks
+ * task_assignments
+ * velocity-tracking
+ * sprints
+ * sprint-tasks
 6. Run `npm i -g .` to install voxa-flow.
 7. Run `voxa --help` for more information on the commands.
 
